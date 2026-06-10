@@ -17,7 +17,7 @@ type Event struct {
 var events = []Event{}
 
 // Method to save event to the database
-func (e Event) Save() error {
+func (e *Event) Save() error {
 	query := `
 	INSERT INTO events(name, location, datetime, description, user_id)
 	VALUES (?, ?, ?, ?, ?)`
@@ -83,7 +83,7 @@ func GetEventById(id int64) (*Event, error) {
 	return &event, nil
 }
 
-func (event Event) UpdateEvent() error {
+func (event *Event) UpdateEvent() error {
 	query := `
 	UPDATE events 
 	SET name = ?, location = ?, datetime = ?, description = ?
@@ -102,7 +102,7 @@ func (event Event) UpdateEvent() error {
 	return err
 }
 
-func (event Event) DeleteEvent() error {
+func (event *Event) DeleteEvent() error {
 	query := "DELETE from events WHERE id = ?"
 
 	// Use prepared statement to prevent SQL injection

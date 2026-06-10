@@ -75,7 +75,7 @@ func createEvent(context *gin.Context) {
 	}
 
 	// Placeholder for userId
-	event.UserId = 1
+	// event.UserId = 1
 
 	// Save event to database
 	err = event.Save()
