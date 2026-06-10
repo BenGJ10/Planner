@@ -36,3 +36,29 @@ func signup(context *gin.Context) {
 	})
 
 }
+
+func login(context *gin.Context) {
+	var user models.User
+
+	// Bind JSON to user struct
+	err := context.ShouldBindJSON(&user)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "Could not parse the data",
+		})
+		return
+	}
+
+	err = user.Validate()
+
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Authentication failed!",
+		})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"message": "Login successfull!",
+	})
+}
