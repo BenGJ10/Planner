@@ -93,3 +93,78 @@ func createEvent(context *gin.Context) {
 	})
 
 }
+
+func updateEvent(context *gin.Context) {
+	// Parse URL parameter for event ID
+	eventId, err := strconv.ParseInt(context.Param("id"), 10, 64)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "Could not parse event Id! Try again.",
+		})
+		return
+	}
+
+	_, err = models.GetEventById(eventId)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Could not fetch event! Try again.",
+		})
+		return
+	}
+
+	var updatedEvent models.Event
+	err = context.ShouldBindJSON(&updatedEvent)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "Could not parse the data",
+		})
+		return
+	}
+
+	updatedEvent.ID = eventId
+	err = updatedEvent.UpdateEvent()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Could not update event! Try again.",
+		})
+		return
+	}
+
+	// Return event with 201 Created status
+	context.JSON(http.StatusCreated, gin.H{
+		"message": "Event updated successfully",
+		"event":   updatedEvent,
+	})
+}
+
+func deleteEvent(context *gin.Context) {
+	// Parse URL parameter for event ID
+	eventId, err := strconv.ParseInt(context.Param("id"), 10, 64)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "Could not parse event Id! Try again.",
+		})
+		return
+	}
+
+	event, err := models.GetEventById(eventId)
+
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Could not fetch event! Try again.",
+		})
+		return
+	}
+
+	err = event.DeleteEvent()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Could not delete event! Try again.",
+		})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{
+		"message": "Event deleted successfully",
+	})
+}

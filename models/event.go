@@ -59,7 +59,7 @@ func GetAllEvents() ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var event Event
-		err := rows.Scan(&event.ID, &event.Location, &event.DateTime, &event.Description, &event.UserId)
+		err := rows.Scan(&event.ID, &event.Name, &event.Location, &event.DateTime, &event.Description, &event.UserId)
 		if err != nil {
 			return nil, err
 		}
@@ -67,4 +67,53 @@ func GetAllEvents() ([]Event, error) {
 		events = append(events, event)
 	}
 	return events, nil
+}
+
+func GetEventById(id int64) (*Event, error) {
+	query := "SELECT * FROM events where id = ?"
+
+	row := db.DB.QueryRow(query, id)
+
+	var event Event
+	err := row.Scan(&event.ID, &event.Name, &event.Location, &event.DateTime, &event.Description, &event.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &event, nil
+}
+
+func (event Event) UpdateEvent() error {
+	query := `
+	UPDATE events 
+	SET name = ?, location = ?, datetime = ?, description = ?
+	WHERE id = ?`
+
+	// Use prepared statement to prevent SQL injection
+	prepared_stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	// Use `defer` to ensure the statement is closed after the function returns
+	defer prepared_stmt.Close()
+
+	_, err = prepared_stmt.Exec(event.Name, event.Location, event.DateTime, event.Description, event.ID)
+	return err
+}
+
+func (event Event) DeleteEvent() error {
+	query := "DELETE from events WHERE id = ?"
+
+	// Use prepared statement to prevent SQL injection
+	prepared_stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	// Use `defer` to ensure the statement is closed after the function returns
+	defer prepared_stmt.Close()
+
+	_, err = prepared_stmt.Exec(event.ID)
+	return err
 }
