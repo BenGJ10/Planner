@@ -14,16 +14,10 @@ type User struct {
 
 // Method to save event to the database
 func (u *User) Save() error {
-	query := "INSERT INTO users(email, password) VALUES (?, ?)"
-
-	// Use prepared statement to prevent SQL injection
-	prepared_stmt, err := db.DB.Prepare(query)
-	if err != nil {
-		return err
-	}
-
-	// Use `defer` to ensure the statement is closed after the function returns
-	defer prepared_stmt.Close()
+	query := `
+	INSERT INTO users(email, password)
+	VALUES ($1, $2)
+	RETURNING id`
 
 	// Use the hashed password instead of plain-text password
 	hashedPassword, err := utils.HashPassword(u.Password)
@@ -31,27 +25,22 @@ func (u *User) Save() error {
 		return err
 	}
 
-	result, err := prepared_stmt.Exec(u.Email, hashedPassword)
-	if err != nil {
-		return err
-	}
-
-	userId, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-	u.ID = userId
+	// Execute the query and return the generated ID
+	err = db.DB.QueryRow(
+		query,
+		u.Email,
+		hashedPassword,
+	).Scan(&u.ID)
 
 	return err
 }
 
 func (u *User) Validate() error {
-	query := "select id, password FROM users WHERE email = ?"
-	row := db.DB.QueryRow(query, u.Email)
+	query := "SELECT id, password FROM users WHERE email = $1"
 
 	var retrievedPassword string
-	err := row.Scan(&u.ID, &retrievedPassword)
 
+	err := db.DB.QueryRow(query, u.Email).Scan(&u.ID, &retrievedPassword)
 	if err != nil {
 		return errors.New("Invalid credentials! Try again.")
 	}

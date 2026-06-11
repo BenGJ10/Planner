@@ -11,7 +11,7 @@ type Event struct {
 	Location    string    `binding:"required"`
 	DateTime    time.Time `binding:"required"`
 	Description string
-	UserId      int64
+	UserID      int64
 }
 
 var events = []Event{}
@@ -19,28 +19,18 @@ var events = []Event{}
 // Method to save event to the database
 func (e *Event) Save() error {
 	query := `
-	INSERT INTO events(name, location, datetime, description, user_id)
-	VALUES (?, ?, ?, ?, ?)`
+	INSERT INTO events(name, location, date_time, description, user_id)
+	VALUES ($1, $2, $3, $4, $5)
+	RETURNING id`
 
-	// Use prepared statement to prevent SQL injection
-	prepared_stmt, err := db.DB.Prepare(query)
-	if err != nil {
-		return err
-	}
-
-	// Use `defer` to ensure the statement is closed after the function returns
-	defer prepared_stmt.Close()
-
-	result, err := prepared_stmt.Exec(e.Name, e.Location, e.DateTime, e.Description, e.UserId)
-	if err != nil {
-		return err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-	e.ID = id
+	err := db.DB.QueryRow(
+		query,
+		e.Name,
+		e.Location,
+		e.DateTime,
+		e.Description,
+		e.UserID,
+	).Scan(&e.ID)
 
 	return err
 }
@@ -59,7 +49,7 @@ func GetAllEvents() ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var event Event
-		err := rows.Scan(&event.ID, &event.Name, &event.Location, &event.DateTime, &event.Description, &event.UserId)
+		err := rows.Scan(&event.ID, &event.Name, &event.Location, &event.DateTime, &event.Description, &event.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -70,12 +60,12 @@ func GetAllEvents() ([]Event, error) {
 }
 
 func GetEventById(id int64) (*Event, error) {
-	query := "SELECT * FROM events where id = ?"
+	query := "SELECT * FROM events WHERE id = $1"
 
 	row := db.DB.QueryRow(query, id)
 
 	var event Event
-	err := row.Scan(&event.ID, &event.Name, &event.Location, &event.DateTime, &event.Description, &event.UserId)
+	err := row.Scan(&event.ID, &event.Name, &event.Location, &event.DateTime, &event.Description, &event.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,35 +75,38 @@ func GetEventById(id int64) (*Event, error) {
 
 func (event *Event) UpdateEvent() error {
 	query := `
-	UPDATE events 
-	SET name = ?, location = ?, datetime = ?, description = ?
-	WHERE id = ?`
+	UPDATE events
+	SET name = $1, location = $2, date_time = $3, description = $4
+	WHERE id = $5`
 
-	// Use prepared statement to prevent SQL injection
-	prepared_stmt, err := db.DB.Prepare(query)
-	if err != nil {
-		return err
-	}
+	_, err := db.DB.Exec(
+		query,
+		event.Name,
+		event.Location,
+		event.DateTime,
+		event.Description,
+		event.ID,
+	)
 
-	// Use `defer` to ensure the statement is closed after the function returns
-	defer prepared_stmt.Close()
-
-	_, err = prepared_stmt.Exec(event.Name, event.Location, event.DateTime, event.Description, event.ID)
 	return err
 }
 
 func (event *Event) DeleteEvent() error {
-	query := "DELETE from events WHERE id = ?"
+	query := "DELETE FROM events WHERE id = $1"
 
-	// Use prepared statement to prevent SQL injection
+	_, err := db.DB.Exec(query, event.ID)
+
+	return err
+}
+
+func (event *Event) Register(userID int64) error {
+	query := "INSERT INTO registrations(event_id, user_id) VALUES (?, ?)"
+
 	prepared_stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
 	}
 
-	// Use `defer` to ensure the statement is closed after the function returns
-	defer prepared_stmt.Close()
-
-	_, err = prepared_stmt.Exec(event.ID)
+	_, err = prepared_stmt.Exec(event.ID, userID)
 	return err
 }
