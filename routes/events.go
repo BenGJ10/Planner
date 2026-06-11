@@ -75,7 +75,7 @@ func createEvent(context *gin.Context) {
 	}
 
 	userID := context.GetInt64("userID")
-	event.UserId = userID
+	event.UserID = userID
 
 	// Save event to database
 	err = event.Save()
@@ -115,7 +115,7 @@ func updateEvent(context *gin.Context) {
 	}
 
 	// Check if the event belongs to the user
-	if event.UserId != userID {
+	if event.UserID != userID {
 		context.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Not authorized to update event!",
 		})
@@ -134,7 +134,7 @@ func updateEvent(context *gin.Context) {
 
 	// Bind event ID and user ID to the updated event
 	updatedEvent.ID = eventId
-	updatedEvent.UserId = userID
+	updatedEvent.UserID = userID
 
 	// Save the updated event to the database
 	err = updatedEvent.UpdateEvent()
@@ -173,7 +173,7 @@ func deleteEvent(context *gin.Context) {
 	}
 
 	// Check if the event belongs to the user
-	if event.UserId != userID {
+	if event.UserID != userID {
 		context.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Not authorized to delete event!",
 		})
