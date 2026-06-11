@@ -2,6 +2,7 @@ package routes
 
 import (
 	"event-manager-app/models"
+	"event-manager-app/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -49,8 +50,8 @@ func login(context *gin.Context) {
 		return
 	}
 
+	// Validate user data
 	err = user.Validate()
-
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Authentication failed!",
@@ -58,7 +59,17 @@ func login(context *gin.Context) {
 		return
 	}
 
+	// Generate JWT token on successful login
+	token, err := utils.GenerateToken(user.Email, user.ID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Authentication failed!",
+		})
+		return
+	}
+
 	context.JSON(http.StatusOK, gin.H{
 		"message": "Login successfull!",
+		"token":   token,
 	})
 }

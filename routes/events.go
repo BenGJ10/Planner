@@ -74,8 +74,8 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
-	// Placeholder for userId
-	// event.UserId = 1
+	userID := context.GetInt64("userID")
+	event.UserId = userID
 
 	// Save event to database
 	err = event.Save()
@@ -104,7 +104,9 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
-	_, err = models.GetEventById(eventId)
+	// Retrieve userID from the request context and get the event from the database
+	userID := context.GetInt64("userID")
+	event, err := models.GetEventById(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Could not fetch event! Try again.",
@@ -112,6 +114,15 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
+	// Check if the event belongs to the user
+	if event.UserId != userID {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Not authorized to update event!",
+		})
+		return
+	}
+
+	// Update event data
 	var updatedEvent models.Event
 	err = context.ShouldBindJSON(&updatedEvent)
 	if err != nil {
@@ -121,7 +132,11 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
+	// Bind event ID and user ID to the updated event
 	updatedEvent.ID = eventId
+	updatedEvent.UserId = userID
+
+	// Save the updated event to the database
 	err = updatedEvent.UpdateEvent()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -147,8 +162,9 @@ func deleteEvent(context *gin.Context) {
 		return
 	}
 
+	// Retrieve userID from the request context and get the event from the database
+	userID := context.GetInt64("userID")
 	event, err := models.GetEventById(eventId)
-
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Could not fetch event! Try again.",
@@ -156,6 +172,15 @@ func deleteEvent(context *gin.Context) {
 		return
 	}
 
+	// Check if the event belongs to the user
+	if event.UserId != userID {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Not authorized to delete event!",
+		})
+		return
+	}
+
+	// Delete the event from the database
 	err = event.DeleteEvent()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
