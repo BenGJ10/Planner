@@ -1,35 +1,62 @@
-# Planner - Event Management API
+# Planner - Event Manager
 
-A modern, scalable event management backend built with **Go**. Eventra provides a robust REST API that allows users to create, manage, discover, and register for events with secure authentication and authorization using JWT.
+**Planner** is a modern, scalable, and secure event management backend built with **Go**. Designed with a SaaS-first architecture, it enables users to discover events, organize their own events, manage registrations, and interact through a secure JWT-based authentication system.
 
-## Features
-
-* User authentication and account management
-* Secure password hashing
-* JWT-based authentication
-* Protected API routes
-* Role-based event authorization
-* Create and manage events
-* Retrieve all available events
-* View detailed information for a single event
-* Update existing events
-* Delete events
-* Register for events
-* Cancel event registrations
-* Structured and maintainable Go backend architecture
+The platform follows a clean backend architecture with a strong emphasis on **security, maintainability, and scalability**, making it suitable as the foundation for a production-grade event management solution.
 
 ---
 
-## Tech Stack
+## System Architecture
+
+![System Architecture Diagram](other/system-architecture.png)
 
 
-| Technology | Purpose                          |
-| ---------- | -------------------------------- |
-| Go         | Backend development               |
-| JWT        | User authentication and authorization |
-| PostgreSQL        | Database storage of users and events |
-| Postman     | API testing and documentation     |
+## Core Features
 
+### 👤 User Management & Authentication
+
+* User registration and login workflows
+* Secure password hashing using bcrypt
+* JWT-based authentication and session management
+* Protected API endpoints using authentication middleware
+* User-specific authorization for event management
+
+### 🎯 Event Management
+
+* Create and publish events
+* Browse all available events
+* Retrieve detailed information about individual events
+* Update event details
+* Delete existing events
+* Ownership-based authorization (only creators can modify their events)
+
+### 🎟️ Event Registration System
+
+* Register for available events
+* Cancel existing registrations
+* Manage attendee participation
+
+### 🏗️ Backend Architecture
+
+* RESTful API design principles
+* Modular project structure following separation of concerns
+* Database abstraction through models and data access methods
+* Middleware-driven authentication flow
+* Clean error handling and request validation
+
+---
+
+## Technology Stack
+
+| Technology    | Purpose                                    |
+| ------------- | ------------------------------------------ |
+| Go (Golang)   | High-performance backend development       |
+| Gin Framework | REST API routing and middleware            |
+| PostgreSQL    | Relational database management             |
+| JWT           | Stateless authentication and authorization |
+| bcrypt        | Password hashing and security              |
+| Postman       | API testing and endpoint validation        |
+| Git & GitHub  | Version control and collaboration          |
 
 ---
 
@@ -37,77 +64,128 @@ A modern, scalable event management backend built with **Go**. Eventra provides 
 
 ### Authentication
 
-| Method | Endpoint  | Description                          |
-| ------ | --------- | ------------------------------------ |
-| POST   | `/signup` | Register a new user                  |
-| POST   | `/login`  | Authenticate a user and generate JWT |
+| Method | Endpoint  | Description                             |
+| ------ | --------- | --------------------------------------- |
+| POST   | `/signup` | Create a new user account               |
+| POST   | `/login`  | Authenticate user and receive JWT token |
 
 ---
 
-### Events
+### Event Management
 
-| Method | Endpoint      | Description                          |
-| ------ | ------------- | ------------------------------------ |
-| GET    | `/events`     | Get all available events             |
-| GET    | `/events/:id` | Get details of a specific event      |
-| POST   | `/events`     | Create a new event *(Authenticated)* |
-| PUT    | `/events/:id` | Update an event *(Owner only)*       |
-| DELETE | `/events/:id` | Delete an event *(Owner only)*       |
+| Method | Endpoint      | Access             | Description                   |
+| ------ | ------------- | ------------------ | ----------------------------- |
+| GET    | `/events`     | Public             | Retrieve all available events |
+| GET    | `/events/:id` | Public             | Retrieve event details        |
+| POST   | `/events`     | Authenticated User | Create a new event            |
+| PUT    | `/events/:id` | Event Owner        | Update an existing event      |
+| DELETE | `/events/:id` | Event Owner        | Delete an event               |
 
 ---
 
-### Event Registrations
+### Event Registration
 
-| Method | Endpoint               | Description                                 |
-| ------ | ---------------------- | ------------------------------------------- |
-| POST   | `/events/:id/register` | Register for an event *(Authenticated)*     |
-| DELETE | `/events/:id/register` | Cancel event registration *(Authenticated)* |
+| Method | Endpoint               | Access             | Description                     |
+| ------ | ---------------------- | ------------------ | ------------------------------- |
+| POST   | `/events/:id/register` | Authenticated User | Register for an event           |
+| DELETE | `/events/:id/register` | Authenticated User | Cancel an existing registration |
 
 ---
 
 ## Project Structure
 
-```
-eventra/
+```text
+planner/
 │
-├── main.go                 # Application entry point
-├── routes/                 # API route handlers
-├── models/                 # Database models and business logic
-├── middleware/             # JWT authentication & authorization
-├── db/                     # Database connection and setup
-├── utils/                  # Helper utilities
-└── api-test/               # Postman or REST request collections
+├── main.go                # Application bootstrap
+│
+├── routes/                # API endpoint handlers
+│   ├── events.go
+│   └── users.go
+│
+├── models/                # Database models and operations
+│   ├── event.go
+│   └── user.go
+│
+├── middleware/            # JWT authentication and request protection
+│
+├── db/                    # Database connection and schema initialization
+│
+├── utils/                 # Utility functions
+│   ├── password.go        # Password hashing and verification
+│   └── token.go           # JWT creation and validation
+│
+└── api-test/              # Postman collections and API testing files
 ```
 
 ---
 
-## Security Features
+## Security Practices
 
-* Passwords are never stored as plain text
-* Password hashing before database storage
-* JWT-based user authentication
-* Middleware for protected routes
-* Authorization checks to ensure users can only modify their own events
+Planner incorporates several security mechanisms:
+
+* Passwords are never stored in plain text
+* Passwords are hashed using bcrypt before persistence
+* JWT tokens secure authenticated requests
+* Authorization checks prevent unauthorized event modifications
+* Input validation protects API endpoints from malformed requests
+* Prepared SQL statements are used to mitigate SQL injection attacks
 
 ---
 
-## Future Enhancements
+## 📋 Current Development Roadmap
 
-* Event categories and search filters
-* Event image uploads
-* Email notifications
-* Payment gateway integration
-* Ticket generation with QR codes
-* Admin dashboard
+The platform is actively evolving towards a complete cloud-native SaaS solution.
+
+### User & Administration
+
+* Role-Based Access Control (Admin, Organizer, User)
+* Dedicated admin dashboard APIs
+* User moderation and management tools
+
+### Event Intelligence
+
+* Event categories and filtering
+* Event search capabilities
+* Event capacity and seat management
+* Event analytics
+
+### Ticketing Platform
+
+* Digital ticket generation
+* Unique ticket identifiers
+* QR-code based ticket verification
+* Ticket lifecycle management
+
+### Infrastructure & DevOps
+
 * Docker containerization
-* API documentation using Swagger/OpenAPI
-* Rate limiting and logging
+* Docker Compose for local development
+* PostgreSQL migration and database versioning
+* Cloud deployment on AWS ECS Fargate
+* AWS RDS for managed PostgreSQL
+* AWS ECR for container image management
+* AWS CloudWatch monitoring and logging
+* Secrets management for environment configuration
+
+---
+
+## Project Goals
+
+Planner aims to evolve from a REST API into a production-grade **Event Management SaaS Platform** capable of handling user management, event organization, ticketing, and cloud-native deployment.
+
+The project emphasizes modern backend engineering practices including secure authentication, scalable architecture, containerization, and cloud infrastructure.
 
 ---
 
 ## Contribution
 
-Contributions, issues, and feature requests are welcome. Feel free to fork the repository and submit a pull request.
+Contributions, issues, and feature suggestions are always welcome. Feel free to fork the repository and open a pull request.
 
 ---
 
+## License
+
+This project is open-sourced under the MIT License.
+
+---
